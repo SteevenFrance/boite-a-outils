@@ -281,30 +281,13 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 @keyframes pop-in { from{transform:translateX(-50%) scale(.6);opacity:0} to{transform:translateX(-50%) scale(1);opacity:1} }
 
-/* DRAW HINT */
-.draw-hint {
-  display:flex; flex-direction:column; align-items:center; gap:4px;
-  margin-bottom:8px; flex-shrink:0;
-  animation: hint-appear .7s ease 1.2s both;
-  transition: opacity .4s ease, transform .4s ease;
+/* DRAW HINT — halo pulsant */
+@keyframes hint-halo {
+  0%   { box-shadow: 0 0 0 0px rgba(254,202,87,.55), 0 8px 32px rgba(254,202,87,.28); }
+  60%  { box-shadow: 0 0 0 14px rgba(254,202,87,.0),  0 8px 32px rgba(254,202,87,.28); }
+  100% { box-shadow: 0 0 0 0px rgba(254,202,87,.0),  0 8px 32px rgba(254,202,87,.28); }
 }
-.draw-hint.hidden { opacity:0; transform:translateY(-6px); pointer-events:none; }
-.draw-hint-text {
-  font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-muted);
-}
-.draw-hint-arrow {
-  color:#FECA57;
-  animation: bounce-down 1s ease-in-out infinite;
-  filter: drop-shadow(0 0 6px rgba(254,202,87,.5));
-}
-@keyframes bounce-down {
-  0%,100% { transform:translateY(0); }
-  50%      { transform:translateY(7px); }
-}
-@keyframes hint-appear {
-  from { opacity:0; transform:translateY(-8px); }
-  to   { opacity:1; transform:translateY(0); }
-}
+.btn-draw.hint-pulse { animation: hint-halo 1.6s ease-out infinite; }
 
 /* DRAW BUTTON */
 .btn-draw {
@@ -530,12 +513,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
     <div class="result-badge" id="rbadge" style="display:none"></div>
   </div>
 
-  <div class="draw-hint" id="draw-hint">
-    <span class="draw-hint-text">Appuie ici</span>
-    <svg class="draw-hint-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-  </div>
-
-  <button class="btn-draw" id="btn-draw" onclick="doDraw()">
+  <button class="btn-draw hint-pulse" id="btn-draw" onclick="doDraw()">
     <span id="btn-txt">🎲 Tirer ma table</span>
   </button>
 
@@ -736,19 +714,13 @@ function goConfig(){
   document.getElementById('btn-txt').textContent='🎲 Tirer ma table';
   document.getElementById('s-draw').classList.remove('active');
   document.getElementById('s-config').classList.add('active');
-  const h=document.getElementById('draw-hint');
-  if(h)h.classList.remove('hidden');
   syncHint();
 }
 
 /* ── DRAW ────────────────────────────────────────────────── */
-function hideHint(){
-  const h=document.getElementById('draw-hint');
-  if(h&&!h.classList.contains('hidden'))h.classList.add('hidden');
-}
 function doDraw(){
   if(spinning) return;
-  hideHint();
+  document.getElementById('btn-draw').classList.remove('hint-pulse');
   const avail=tables.filter(t=>t.assigned<t.max);
   if(!avail.length) return;
   spinning=true;
@@ -860,6 +832,7 @@ function doReset(){
     history=[]; flashId=null;
     resetDrum(); renderTables(); updateStats(); renderHist(); updateUndoBtn();
     document.getElementById('complete').style.display='none';
+    document.getElementById('btn-draw').classList.add('hint-pulse');
     showHist=false; document.getElementById('hist-panel').style.display='none';
   }
 }
