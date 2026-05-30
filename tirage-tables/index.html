@@ -61,6 +61,30 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 /* ── THEME TOGGLE BUTTON ─────────────────────────────────── */
+.share-btn {
+  position: fixed; top: 14px; right: 64px; z-index: 100;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--bg2); border: 1px solid var(--border2);
+  color: var(--text); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  transition: transform .2s, box-shadow .2s, background .3s;
+  touch-action: manipulation;
+}
+.share-btn:hover { transform: scale(1.1); box-shadow: 0 4px 20px rgba(0,0,0,.2); }
+.share-btn:active { transform: scale(.95); }
+.share-btn svg { width: 18px; height: 18px; }
+.share-toast {
+  position: fixed; bottom: 68px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg2); border: 1px solid rgba(254,202,87,.4);
+  color: var(--text); padding: 12px 20px;
+  border-radius: 10px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s, transform .25s; z-index: 201;
+}
+.share-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .theme-btn {
   position: fixed; top: 14px; right: 14px; z-index: 100;
   width: 42px; height: 42px; border-radius: 50%;
@@ -370,6 +394,12 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 </style>
 </head>
 <body>
+
+<!-- Share button -->
+<button class="share-btn" id="share-btn" aria-label="Partager">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+</button>
+<div class="share-toast" id="share-toast">Lien copié !</div>
 
 <!-- Theme toggle (global, always visible) -->
 <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
@@ -872,6 +902,25 @@ function spawnParticles(baseColor){
 /* ── INIT ────────────────────────────────────────────────── */
 rebuildCustomGrid();
 syncHint();
+
+let shareToastTimer = null;
+function showShareToast(msg, duration) {
+  const t = document.getElementById('share-toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(shareToastTimer);
+  shareToastTimer = setTimeout(() => t.classList.remove('show'), duration || 2200);
+}
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const url = window.location.href;
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Tirage des Tables', url }); } catch(e) {}
+  } else {
+    try {
+      await navigator.clipboard.writeText(url);
+      showShareToast('Lien copié !');
+    } catch(e) { showShareToast(url, 6000); }
+  }
+});
 </script>
 </body>
 </html>

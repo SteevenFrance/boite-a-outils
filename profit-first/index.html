@@ -162,9 +162,37 @@
 
   footer { text-align: center; margin-top: 36px; color: var(--muted); font-size: 0.82rem; }
   footer b { color: var(--ink); font-weight: 600; }
+
+  .share-btn {
+    position: fixed; top: 14px; right: 14px; z-index: 100;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--bg-card); border: 1px solid var(--line);
+    color: var(--ink); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,.15);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .share-btn:hover { transform: scale(1.1); box-shadow: 0 4px 20px rgba(0,0,0,.2); }
+  .share-btn:active { transform: scale(.95); }
+  .share-btn svg { width: 18px; height: 18px; }
+  .share-toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-card); border: 1px solid var(--gold);
+    color: var(--ink); padding: 12px 20px;
+    border-radius: 10px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s; z-index: 200;
+  }
+  .share-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+<button class="share-btn" id="share-btn" aria-label="Partager">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+</button>
+<div class="share-toast" id="share-toast">Lien copié !</div>
 <div class="wrap">
   <header>
     <div class="eyebrow">Méthode Profit First</div>
@@ -354,6 +382,25 @@
 
   build();
   render();
+
+  let shareToastTimer = null;
+  function showShareToast(msg, duration) {
+    const t = document.getElementById('share-toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(shareToastTimer);
+    shareToastTimer = setTimeout(() => t.classList.remove('show'), duration || 2200);
+  }
+  document.getElementById('share-btn').addEventListener('click', async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Profit First — Ventilation des revenus', url }); } catch(e) {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        showShareToast('Lien copié !');
+      } catch(e) { showShareToast(url, 6000); }
+    }
+  });
 </script>
 </body>
 </html>
