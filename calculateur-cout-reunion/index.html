@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur de Coût de Réunion</title>
+<meta name="description" content="Suivez en temps réel le coût de vos réunions et gardez le timing sous contrôle. Un outil de sensibilisation managériale par Steeven Cadel.">
+
+<!-- Favicon (SVG autonome, pas de fichier externe) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2314110f'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='%23c79a3a' font-family='Georgia,serif'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
+
+<!-- Partage social (Open Graph + Twitter) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Calculateur de Coût de Réunion">
+<meta property="og:description" content="Suivez en temps réel le coût de vos réunions. Combien coûte vraiment ce point d'une heure ?">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Calculateur de Coût de Réunion">
+<meta name="twitter:description" content="Suivez en temps réel le coût de vos réunions. Combien coûte vraiment ce point d'une heure ?">
+<meta name="theme-color" content="#14110f">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14110f;
+    --paper: #f4efe6;
+    --paper-2: #ebe3d4;
+    --amber: #e0792b;
+    --amber-deep: #c25a14;
+    --forest: #2f6f4f;
+    --forest-deep: #235a3f;
+    --crimson: #b23a3a;
+    --gold: #c79a3a;
+    --line: #d8cdb8;
+    --muted: #6b6253;
+    --shadow: rgba(20, 17, 15, 0.12);
+    --bg: #14110f;
+    --field-bg: #fbf8f1;
+    --stat-bg: #fbf8f1;
+  }
+
+  body[data-theme="dark"] {
+    --ink: #ece4d4;
+    --paper: #1d1916;
+    --paper-2: #14110f;
+    --line: #3a332b;
+    --muted: #9c9082;
+    --bg: #0c0a09;
+    --field-bg: #14110f;
+    --stat-bg: #14110f;
+    --gold: #d8b455;
+    --amber: #ef8b3e;
+    --amber-deep: #f0a05a;
+    --forest: #4a9d72;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(224,121,43,0.10), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(47,111,79,0.10), transparent 45%);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 18px;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.4s;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 1080px;
+    background: var(--paper);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 40px 90px rgba(0,0,0,0.45);
+    position: relative;
+  }
+
+  /* paper grain */
+  .app::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 5; mix-blend-mode: multiply;
+  }
+
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 24px 40px 34px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: ''; position: absolute; right: -60px; top: -60px;
+    width: 240px; height: 240px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(224,121,43,0.35), transparent 70%);
+  }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--amber); margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(28px, 5vw, 46px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+  header p { color: rgba(244,239,230,0.62); margin-top: 10px; font-size: 15px; }
+
+  /* Barre d'outils : au-dessus du titre, alignée à droite, jamais en superposition */
+  .toolbar {
+    display: flex; gap: 8px;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 3;
+  }
+  .tool-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(244,239,230,0.22);
+    background: rgba(244,239,230,0.06);
+    border-radius: 11px;
+    color: var(--paper);
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.1s;
+    backdrop-filter: blur(4px);
+  }
+  .tool-btn:hover { background: rgba(244,239,230,0.15); border-color: var(--amber); }
+  .tool-btn:active { transform: scale(0.92); }
+  .tool-btn svg { width: 19px; height: 19px; }
+  .tool-btn.off { opacity: 0.45; }
+
+  /* Toast de confirmation (copie du lien) */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--gold);
+    padding: 13px 22px;
+    border-radius: 12px;
+    font-size: 14px; font-weight: 600;
+    max-width: min(90vw, 420px);
+    word-break: break-all;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (max-width: 480px) {
+    .toolbar { gap: 6px; margin-bottom: 14px; }
+    .tool-btn { width: 36px; height: 36px; }
+    .tool-btn svg { width: 17px; height: 17px; }
+  }
+
+  /* Animation du compteur de coût : léger sursaut à chaque incrément */
+  .stat.cost .val { display: inline-block; }
+  .stat.cost .val.tick { animation: costTick 0.35s ease; }
+  @keyframes costTick {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.045); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stat.cost .val.tick { animation: none; }
+    .progress.time .bar::after { animation: none; }
+  }
+
+  /* Flash d'alerte à l'échéance */
+  @keyframes echeanceFlash {
+    0%, 100% { box-shadow: 0 40px 90px rgba(0,0,0,0.45); }
+    50% { box-shadow: 0 0 0 4px var(--crimson), 0 40px 90px rgba(0,0,0,0.45); }
+  }
+  .app.flash { animation: echeanceFlash 0.7s ease 3; }
+
+  /* ---------- MODE PRÉSENTATION ---------- */
+  body.present .app {
+    max-width: 100%;
+    min-height: 100vh;
+    border-radius: 0;
+    display: flex; flex-direction: column;
+  }
+  body.present .body {
+    grid-template-columns: 1fr;
+    flex: 1;
+  }
+  body.present .panel.left { display: none; }
+  body.present .panel.right {
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 10px;
+    padding: 4vh 6vw;
+  }
+  body.present .stat { padding: 4vh 5vw; text-align: center; }
+  body.present .stat .lbl { font-size: clamp(13px, 2vw, 18px); }
+  body.present .stat .val { font-size: clamp(48px, 13vw, 150px); }
+  body.present .stat.cost .val { font-size: clamp(44px, 12vw, 140px); }
+  body.present .progress.time { height: clamp(20px, 3vh, 34px); }
+  body.present .controls { max-width: 700px; margin: 3vh auto 0; }
+  body.present header h1, body.present header p, body.present .kicker { display: none; }
+  body.present header {
+    padding: 0; min-height: 0;
+  }
+  body.present .toolbar {
+    position: fixed; top: 18px; right: 18px;
+  }
+  body.present .over-badge.show { font-size: clamp(14px, 2.4vw, 22px); max-width: 700px; margin: 2vh auto 0; }
+
+  .body {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: 0;
+  }
+  @media (max-width: 760px) {
+    .body { grid-template-columns: 1fr; }
+  }
+
+  .panel { padding: 38px 40px; }
+  .panel.left { border-right: 1px solid var(--line); }
+  @media (max-width: 760px) {
+    .panel.left { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+
+  .field { margin-bottom: 22px; }
+  .field label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 9px;
+  }
+  .field input {
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 600;
+    padding: 14px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: var(--field-bg);
+    color: var(--ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--amber);
+    box-shadow: 0 0 0 4px rgba(224,121,43,0.14);
+  }
+
+  /* Stepper − / + autour d'un champ */
+  .stepper { display: flex; align-items: stretch; gap: 10px; }
+  .stepper input { flex: 1; text-align: center; }
+  .step-btn {
+    width: 52px;
+    flex: 0 0 52px;
+    border: 1.5px solid var(--line);
+    background: var(--field-bg);
+    border-radius: 12px;
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--amber-deep);
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.1s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .step-btn:hover { background: var(--paper-2); border-color: var(--amber); }
+  .step-btn:active { transform: scale(0.94); }
+  .step-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Puces de préréglage (durée) */
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .preset {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 8px 13px;
+    border: 1.5px solid var(--line);
+    border-radius: 99px;
+    background: var(--field-bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .preset:hover { border-color: var(--amber); color: var(--amber-deep); }
+  .preset.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--gold);
+  }
+  .preset:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* puces participants : petites, alignées en grille */
+  #participantPresets .preset { min-width: 38px; text-align: center; padding: 8px 0; }
+
+  .total-card {
+    margin-top: 30px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 16px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .total-card .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(244,239,230,0.6);
+  }
+  .total-card .val {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 44px;
+    margin-top: 6px;
+    color: var(--gold);
+  }
+
+  /* RIGHT panel */
+  .panel.right { background: var(--paper-2); }
+
+  .stat {
+    background: var(--stat-bg);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+  }
+  .stat .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stat .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(34px, 6vw, 50px);
+    letter-spacing: -0.01em;
+    margin-top: 8px;
+    color: var(--ink);
+    transition: color 0.3s;
+  }
+  .stat.cost .val { color: var(--forest); }
+  .stat.cost.warn .val { color: var(--amber-deep); }
+  .stat.cost.over .val { color: var(--crimson); }
+
+  .progress {
+    height: 8px;
+    border-radius: 99px;
+    background: var(--paper-2);
+    margin-top: 16px;
+    overflow: hidden;
+  }
+  .progress .bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: var(--forest);
+    transition: width 0.5s linear, background 0.4s;
+  }
+  .progress .bar.warn { background: var(--amber); }
+  .progress .bar.over { background: var(--crimson); }
+
+  /* Barre du TEMPS RESTANT : plus épaisse, plus visible, décroissante */
+  .progress.time {
+    height: 16px;
+    margin-top: 18px;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    box-shadow: inset 0 1px 3px rgba(20,17,15,0.10);
+  }
+  .progress.time .bar {
+    transition: width 1s linear, background 0.4s;
+    background: linear-gradient(180deg, #3a8862 0%, var(--forest) 100%);
+    box-shadow: 0 0 10px rgba(47,111,79,0.45);
+    position: relative;
+    overflow: hidden;
+  }
+  /* reflet animé qui glisse pour attirer l'œil */
+  .progress.time .bar::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: translateX(-100%);
+    animation: sheen 2.4s linear infinite;
+  }
+  .progress.time .bar.warn {
+    background: linear-gradient(180deg, #ee9445 0%, var(--amber) 100%);
+    box-shadow: 0 0 12px rgba(224,121,43,0.55);
+  }
+  .progress.time .bar.over {
+    background: linear-gradient(180deg, #d05656 0%, var(--crimson) 100%);
+    box-shadow: 0 0 12px rgba(178,58,58,0.6);
+  }
+  @keyframes sheen { to { transform: translateX(100%); } }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .btn {
+    flex: 1;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 15px 12px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform 0.12s, filter 0.2s, opacity 0.2s;
+  }
+  .btn:active { transform: translateY(1px) scale(0.99); }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+  .btn.start { background: var(--forest); }
+  .btn.pause { background: var(--gold); color: var(--ink); }
+  .btn.reset { background: var(--crimson); }
+  .btn svg { width: 16px; height: 16px; }
+
+  .over-badge {
+    display: none;
+    margin-top: 16px;
+    background: rgba(178,58,58,0.12);
+    border: 1px solid rgba(178,58,58,0.35);
+    color: var(--crimson);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px; font-weight: 600;
+    text-align: center;
+  }
+  .over-badge.show { display: block; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+  footer {
+    text-align: center;
+    padding: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+    background: var(--paper);
+  }
+  footer b { color: var(--amber-deep); font-weight: 600; }
+
+  .running header h1 { /* subtle live cue */ }
+  .live-dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--muted); margin-left: 4px; vertical-align: middle;
+  }
+  .running .live-dot { background: var(--forest); animation: pulse 1.2s infinite; }
+
+  /* ---------- RESPONSIVE ---------- */
+
+  /* Tablettes */
+  @media (max-width: 760px) {
+    body { padding: 16px 12px; }
+    .app { border-radius: 18px; }
+    header { padding: 30px 26px 26px; }
+    .panel { padding: 30px 26px; }
+    .total-card .val { font-size: 38px; }
+  }
+
+  /* Téléphones */
+  @media (max-width: 480px) {
+    body { padding: 10px 8px; align-items: flex-start; }
+    .app { border-radius: 16px; }
+    header { padding: 24px 20px 22px; }
+    .kicker { font-size: 10px; letter-spacing: 0.25em; }
+    header p { font-size: 13.5px; }
+    .panel { padding: 22px 20px; }
+
+    .field { margin-bottom: 18px; }
+    .field input { font-size: 19px; padding: 12px 14px; }
+
+    .total-card { margin-top: 22px; padding: 18px 20px; }
+    .total-card .val { font-size: 32px; }
+
+    .stat { padding: 18px 20px; margin-bottom: 14px; }
+    /* Le timer s'adapte sans déborder */
+    .stat .val { font-size: clamp(30px, 11vw, 44px); }
+    .stat.cost .val { font-size: clamp(28px, 9.5vw, 40px); }
+
+    /* Boutons empilés et confortables au doigt */
+    .controls { flex-wrap: wrap; gap: 10px; }
+    .btn {
+      flex: 1 1 100%;
+      font-size: 16px;
+      padding: 16px 12px;
+      min-height: 52px;
+    }
+    .over-badge { font-size: 12.5px; }
+    footer { font-size: 12px; padding: 16px; }
+  }
+
+  /* Très petits écrans : on garde les chiffres lisibles */
+  @media (max-width: 340px) {
+    .stat .val { font-size: clamp(26px, 13vw, 34px); }
+    .total-card .val { font-size: 28px; }
+  }
+
+  /* Évite le zoom auto iOS sur focus des champs (>=16px) tout en gardant le style */
+  @media (max-width: 480px) and (hover: none) {
+    .field input { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="toolbar">
+        <button type="button" class="tool-btn" id="themeBtn" title="Mode sombre / clair" aria-label="Basculer le thème">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+        <button type="button" class="tool-btn" id="soundBtn" title="Alerte sonore" aria-label="Activer ou couper le son" aria-pressed="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" id="soundIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+        </button>
+        <button type="button" class="tool-btn" id="presentBtn" title="Mode présentation" aria-label="Mode présentation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h20v12H2z"/><path d="M12 16v4M8 20h8"/></svg>
+        </button>
+        <button type="button" class="tool-btn" id="shareBtn" title="Partager" aria-label="Partager">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+        </button>
+        <button type="button" class="tool-btn" id="fsBtn" title="Plein écran" aria-label="Plein écran">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+      </div>
+      <div class="kicker">Suivi en temps réel <span class="live-dot"></span></div>
+      <h1>Calculateur de Coût de Réunion</h1>
+      <p>Visualisez le coût qui défile et gardez le timing sous contrôle.</p>
+    </header>
+
+    <div class="body">
+      <!-- LEFT -->
+      <div class="panel left">
+        <div class="field">
+          <label for="participants">Nombre de participants</label>
+          <div class="stepper">
+            <button type="button" class="step-btn" id="pMinus" aria-label="Moins un participant">−</button>
+            <input type="number" id="participants" value="5" min="1" step="1" inputmode="numeric">
+            <button type="button" class="step-btn" id="pPlus" aria-label="Plus un participant">+</button>
+          </div>
+          <div class="presets" id="participantPresets">
+            <button type="button" class="preset" data-p="1">1</button>
+            <button type="button" class="preset" data-p="2">2</button>
+            <button type="button" class="preset" data-p="3">3</button>
+            <button type="button" class="preset" data-p="4">4</button>
+            <button type="button" class="preset" data-p="5">5</button>
+            <button type="button" class="preset" data-p="6">6</button>
+            <button type="button" class="preset" data-p="7">7</button>
+            <button type="button" class="preset" data-p="8">8</button>
+            <button type="button" class="preset" data-p="9">9</button>
+            <button type="button" class="preset" data-p="10">10</button>
+            <button type="button" class="preset" data-p="11">11</button>
+            <button type="button" class="preset" data-p="12">12</button>
+            <button type="button" class="preset" data-p="13">13</button>
+            <button type="button" class="preset" data-p="14">14</button>
+            <button type="button" class="preset" data-p="15">15</button>
+            <button type="button" class="preset" data-p="16">16</button>
+            <button type="button" class="preset" data-p="17">17</button>
+            <button type="button" class="preset" data-p="18">18</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="rate">Coût horaire moyen par participant (€)</label>
+          <div class="stepper">
+            <button type="button" class="step-btn" id="rMinus" aria-label="Réduire de 10 euros">−</button>
+            <input type="number" id="rate" value="50" min="0" step="10" inputmode="decimal">
+            <button type="button" class="step-btn" id="rPlus" aria-label="Ajouter 10 euros">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="duration">Durée prévue (minutes)</label>
+          <div class="stepper">
+            <button type="button" class="step-btn" id="dMinus" aria-label="Réduire de 5 minutes">−</button>
+            <input type="number" id="duration" value="60" min="5" step="5" inputmode="numeric">
+            <button type="button" class="step-btn" id="dPlus" aria-label="Ajouter 5 minutes">+</button>
+          </div>
+          <div class="presets" id="durationPresets">
+            <button type="button" class="preset" data-min="30">30 min</button>
+            <button type="button" class="preset" data-min="45">45 min</button>
+            <button type="button" class="preset" data-min="60">1 h</button>
+            <button type="button" class="preset" data-min="90">1 h 30</button>
+            <button type="button" class="preset" data-min="120">2 h</button>
+            <button type="button" class="preset" data-min="240">4 h</button>
+          </div>
+        </div>
+
+        <div class="total-card">
+          <div class="lbl">Coût prévisionnel total</div>
+          <div class="val" id="totalCost">250,00 €</div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="panel right">
+        <div class="stat">
+          <div class="lbl">Temps écoulé</div>
+          <div class="val" id="elapsed">00:00:00</div>
+        </div>
+
+        <div class="stat">
+          <div class="lbl">Temps restant</div>
+          <div class="val" id="remaining">01:00:00</div>
+          <div class="progress time"><div class="bar" id="timeBar"></div></div>
+        </div>
+
+        <div class="stat cost" id="costCard">
+          <div class="lbl">Coût actuel</div>
+          <div class="val" id="currentCost">0,00 €</div>
+          <div class="progress"><div class="bar" id="costBar"></div></div>
+        </div>
+
+        <div class="over-badge" id="overBadge" role="alert" aria-live="assertive">⚠ Réunion dépassée — chaque minute coûte en plus</div>
+
+        <div class="controls">
+          <button class="btn start" id="startBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <span>Démarrer</span>
+          </button>
+          <button class="btn pause" id="pauseBtn" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+            Pause
+          </button>
+          <button class="btn reset" id="resetBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
+            Réinit.
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer>Fait avec <b>♥</b> par Steeven Cadel</footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Lien copié !</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmtEur = n => n.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+  const fmtTime = totalSec => {
+    const sign = totalSec < 0 ? '-' : '';
+    let s = Math.abs(Math.floor(totalSec));
+    const h = String(Math.floor(s/3600)).padStart(2,'0');
+    const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+    const sec = String(s%60).padStart(2,'0');
+    return sign + h + ':' + m + ':' + sec;
+  };
+
+  let elapsedSec = 0, timer = null, running = false;
+  let startStamp = 0, baseSec = 0; // ancrage horloge réelle
+  let elapsedExact = 0;            // secondes fractionnaires (coût fluide)
+  let lastWholeEuro = 0;           // pour l'animation tick
+  let echeanceFired = false;       // alerte d'échéance déjà déclenchée ?
+  let soundOn = true;
+
+  const inputs = ['participants','rate','duration'].map($);
+  function num(v){ const n = parseFloat(v); return (isFinite(n) && n > 0) ? n : 0; }
+  function getCfg(){
+    return {
+      p: num($('participants').value),
+      r: num($('rate').value),
+      d: num($('duration').value)
+    };
+  }
+
+  function render(){
+    const {p, r, d} = getCfg();
+    const durationSec = d * 60;
+    const costPerSec = (p * r) / 3600;
+
+    // total prévisionnel
+    $('totalCost').textContent = fmtEur(p * r * (d/60));
+
+    // temps (affichage à la seconde)
+    $('elapsed').textContent = fmtTime(elapsedSec);
+    $('remaining').textContent = fmtTime(durationSec - elapsedSec);
+
+    // coût actuel — calculé sur le temps EXACT pour défiler en continu
+    const cur = elapsedExact * costPerSec;
+    $('currentCost').textContent = fmtEur(cur);
+
+    // micro-animation : sursaut quand on franchit un euro entier
+    const whole = Math.floor(cur);
+    if (running && whole > lastWholeEuro) {
+      const v = $('currentCost');
+      v.classList.remove('tick');
+      void v.offsetWidth;       // relance l'animation
+      v.classList.add('tick');
+    }
+    lastWholeEuro = whole;
+
+    // barres + états
+    const tRatio = durationSec > 0 ? elapsedSec / durationSec : 0;
+    const timeBar = $('timeBar'), costBar = $('costBar'), costCard = $('costCard');
+    const pct = Math.min(100, tRatio * 100);
+    // Temps restant : barre DÉCROISSANTE (100% -> 0%)
+    timeBar.style.width = (100 - pct) + '%';
+    // Coût : barre croissante
+    costBar.style.width = pct + '%';
+
+    timeBar.className = 'bar' + (tRatio >= 1 ? ' over' : tRatio >= 0.8 ? ' warn' : '');
+    costBar.className = 'bar' + (tRatio >= 1 ? ' over' : tRatio >= 0.8 ? ' warn' : '');
+    costCard.className = 'stat cost' + (tRatio >= 1 ? ' over' : tRatio >= 0.8 ? ' warn' : '');
+
+    $('overBadge').classList.toggle('show', elapsedSec > durationSec && durationSec > 0);
+
+    // alerte d'échéance (une seule fois quand on atteint la durée prévue)
+    if (running && durationSec > 0 && elapsedSec >= durationSec && !echeanceFired) {
+      echeanceFired = true;
+      fireEcheance();
+    }
+
+    if (typeof syncControls === 'function') syncControls();
+  }
+
+  function tick(){
+    const delta = (Date.now() - startStamp) / 1000;
+    elapsedExact = baseSec + delta;
+    elapsedSec = Math.floor(elapsedExact);
+    render();
+  }
+
+  // ----- Alerte d'échéance : visuel + son -----
+  function fireEcheance(){
+    const app = $('app');
+    app.classList.remove('flash');
+    void app.offsetWidth;
+    app.classList.add('flash');
+    if (soundOn) beep();
+  }
+
+  function beep(){
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const ctx = new AC();
+      // deux courtes notes
+      [0, 0.18].forEach((t, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = i === 0 ? 880 : 660;
+        o.connect(g); g.connect(ctx.destination);
+        const start = ctx.currentTime + t;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + 0.15);
+        o.start(start); o.stop(start + 0.16);
+      });
+      setTimeout(() => ctx.close(), 600);
+    } catch(e) { /* audio indisponible : on ignore silencieusement */ }
+  }
+
+  function start(){
+    if(running) return;
+    running = true;
+    startStamp = Date.now();
+    $('app').classList.add('running');
+    $('startBtn').disabled = true;
+    $('pauseBtn').disabled = false;
+    inputs.forEach(i => i.disabled = true);
+    tick();
+    timer = setInterval(tick, 100); // défilement fluide du coût
+  }
+  function pause(){
+    if(!running) return;
+    running = false;
+    baseSec = elapsedExact; // on fige le temps exact accumulé
+    $('app').classList.remove('running');
+    clearInterval(timer);
+    $('startBtn').disabled = false;
+    $('pauseBtn').disabled = true;
+    $('startBtn').querySelector('span').textContent = 'Reprendre';
+  }
+  function reset(){
+    running = false;
+    clearInterval(timer);
+    elapsedSec = 0;
+    baseSec = 0;
+    elapsedExact = 0;
+    lastWholeEuro = 0;
+    echeanceFired = false;
+    $('app').classList.remove('running');
+    $('app').classList.remove('flash');
+    $('startBtn').disabled = false;
+    $('pauseBtn').disabled = true;
+    inputs.forEach(i => i.disabled = false);
+    $('startBtn').querySelector('span').textContent = 'Démarrer';
+    render();
+  }
+
+  $('startBtn').addEventListener('click', start);
+  $('pauseBtn').addEventListener('click', pause);
+  $('resetBtn').addEventListener('click', reset);
+  inputs.forEach(i => i.addEventListener('input', () => { if(!running) render(); }));
+
+  // ----- Steppers participants & durée -----
+  function clamp(v, min){ return v < min ? min : v; }
+
+  function bump(input, delta, min){
+    if(running) return;            // verrouillé pendant la réunion
+    const cur = parseInt(input.value, 10);
+    const base = (isFinite(cur) ? cur : min);
+    input.value = clamp(base + delta, min);
+    render();
+  }
+
+  $('pPlus').addEventListener('click',  () => bump($('participants'),  1, 1));
+  $('pMinus').addEventListener('click', () => bump($('participants'), -1, 1));
+  $('rPlus').addEventListener('click',  () => bump($('rate'),  10, 0));
+  $('rMinus').addEventListener('click', () => bump($('rate'), -10, 0));
+  $('dPlus').addEventListener('click',  () => bump($('duration'),   5, 5));
+  $('dMinus').addEventListener('click', () => bump($('duration'),  -5, 5));
+
+  // ----- Préréglages de durée -----
+  const presetBtns = Array.from(document.querySelectorAll('#durationPresets .preset'));
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(running) return;
+      $('duration').value = btn.dataset.min;
+      render();
+    });
+  });
+
+  // ----- Préréglages de participants (1 à 10) -----
+  const pPresetBtns = Array.from(document.querySelectorAll('#participantPresets .preset'));
+  pPresetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(running) return;
+      $('participants').value = btn.dataset.p;
+      render();
+    });
+  });
+
+  function syncControls(){
+    // surbrillance du préréglage correspondant à la durée courante
+    const d = parseInt($('duration').value, 10);
+    presetBtns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.min,10) === d));
+    // surbrillance du préréglage participant courant
+    const p = parseInt($('participants').value, 10);
+    pPresetBtns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.p,10) === p));
+    // désactiver les contrôles quand le timer tourne
+    [$('pPlus'),$('pMinus'),$('rPlus'),$('rMinus'),$('dPlus'),$('dMinus'),...presetBtns,...pPresetBtns].forEach(el => el.disabled = running);
+    // bornes basses
+    $('pMinus').disabled = running || (parseInt($('participants').value,10) <= 1);
+    $('rMinus').disabled = running || (parseFloat($('rate').value) <= 0);
+    $('dMinus').disabled = running || (parseInt($('duration').value,10) <= 5);
+  }
+
+  // ----- Thème clair / sombre -----
+  $('themeBtn').addEventListener('click', () => {
+    const dark = document.body.getAttribute('data-theme') === 'dark';
+    document.body.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+
+  // ----- Alerte sonore on/off -----
+  $('soundBtn').addEventListener('click', () => {
+    soundOn = !soundOn;
+    $('soundBtn').classList.toggle('off', !soundOn);
+    $('soundBtn').setAttribute('aria-pressed', String(soundOn));
+    // change l'icône (muet / actif)
+    $('soundIcon').innerHTML = soundOn
+      ? '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/>'
+      : '<path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16 9l5 5M21 9l-5 5" stroke="currentColor" stroke-width="2" fill="none"/>';
+  });
+
+  // ----- Mode présentation -----
+  $('presentBtn').addEventListener('click', () => {
+    document.body.classList.toggle('present');
+  });
+
+  // ----- Plein écran -----
+  $('fsBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      (document.documentElement.requestFullscreen
+        || document.documentElement.webkitRequestFullscreen
+        || function(){}).call(document.documentElement);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+    }
+  });
+
+  // Échap quitte le mode présentation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.body.classList.remove('present');
+  });
+
+  // ----- Partage -----
+  let toastTimer = null;
+  function showToast(msg, duration){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), duration || 2200);
+  }
+
+  async function copyLink(url){
+    // 1) API moderne (nécessite HTTPS dans la plupart des navigateurs)
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        showToast('Lien copié !');
+        return;
+      }
+    } catch(e) { /* on tente le repli ci-dessous */ }
+
+    // 2) Repli execCommand (fonctionne parfois hors HTTPS)
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (ok) { showToast('Lien copié !'); return; }
+    } catch(e) { /* dernier recours ci-dessous */ }
+
+    // 3) Dernier recours : on affiche l'URL pour copie manuelle
+    showToast(url, 6000);
+  }
+
+  $('shareBtn').addEventListener('click', async () => {
+    const url = window.location.href;
+    const data = {
+      title: 'Calculateur de Coût de Réunion',
+      text: 'Combien coûte vraiment cette réunion ? Suivez-le en temps réel.',
+      url
+    };
+    if (navigator.share) {
+      try { await navigator.share(data); }
+      catch(e) { /* annulé par l'utilisateur : on ne fait rien */ }
+    } else {
+      copyLink(url);
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
