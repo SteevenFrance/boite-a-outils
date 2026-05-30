@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma boîte à outils</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Outfit:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e1410;
+    --bg-card: #161e18;
+    --ink: #f2efe6;
+    --muted: #8a9a8e;
+    --line: #283129;
+    --gold: #c9a84a;
+    --roi: #c9a84a;
+    --guerrier: #d8743f;
+    --securite: #5f8fb0;
+    --intendance: #6fae7a;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(201,168,74,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(111,174,122,0.07), transparent 60%),
+      var(--bg);
+    color: var(--ink); min-height: 100vh; padding: 64px 20px 90px; line-height: 1.5;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 56px; }
+  .eyebrow { font-size: 0.72rem; letter-spacing: 0.32em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; font-weight: 500; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 900; font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 1.05; letter-spacing: -0.02em; }
+  h1 em { font-style: italic; color: var(--gold); }
+  .sub { color: var(--muted); margin-top: 16px; font-size: 1rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+  .tool {
+    display: flex; flex-direction: column; text-decoration: none; color: inherit;
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-top: 3px solid var(--c, var(--gold)); border-radius: var(--radius);
+    padding: 26px 24px 24px; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .tool:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.35); }
+  .tool .ico { font-size: 1.6rem; margin-bottom: 16px; }
+  .tool h2 { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; }
+  .tool p { color: var(--muted); font-size: 0.9rem; flex: 1; }
+  .tool .go { margin-top: 18px; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--c, var(--gold)); display: flex; align-items: center; gap: 6px; }
+
+  .soon { opacity: 0.5; pointer-events: none; }
+  .soon .go { color: var(--muted); }
+
+  footer { text-align: center; margin-top: 64px; color: var(--muted); font-size: 0.82rem; }
+  footer a { color: var(--gold); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Steeven Cadel</div>
+    <h1>Ma <em>boîte à outils</em></h1>
+    <p class="sub">Des petits outils interactifs, conçus sur mesure. Clique pour ouvrir.</p>
+  </header>
+
+  <div class="grid">
+    <a class="tool" href="./profit-first/" style="--c: var(--roi);">
+      <div class="ico">👑</div>
+      <h2>Profit First</h2>
+      <p>Ventile chaque revenu encaissé selon tes ratios (Bénéfice, Salaires, Impôt, Frais) avec curseurs ajustables.</p>
+      <span class="go">Ouvrir →</span>
+    </a>
+
+    <!-- MODÈLE : duplique ce bloc pour chaque nouvel outil
+    <a class="tool" href="./mon-outil/" style="--c: var(--securite);">
+      <div class="ico">🧭</div>
+      <h2>Nom de l'outil</h2>
+      <p>Courte description de ce que fait l'outil.</p>
+      <span class="go">Ouvrir →</span>
+    </a>
+    -->
+
+    <div class="tool soon" style="--c: var(--intendance);">
+      <div class="ico">✨</div>
+      <h2>À venir</h2>
+      <p>Le prochain outil prendra place ici. Il suffira d'ajouter un dossier et une carte.</p>
+      <span class="go">Bientôt</span>
+    </div>
+  </div>
+
+  <footer>
+    Conçu avec Claude · <a href="https://steevencadel.fr">steevencadel.fr</a>
+  </footer>
+</div>
+</body>
+</html>

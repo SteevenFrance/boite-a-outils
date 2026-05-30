@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profit First — Ventilation des revenus</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Outfit:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e1410;
+    --bg-card: #161e18;
+    --bg-input: #0a0f0c;
+    --ink: #f2efe6;
+    --muted: #8a9a8e;
+    --line: #283129;
+    --gold: #c9a84a;
+    --roi: #c9a84a;
+    --guerrier: #d8743f;
+    --securite: #5f8fb0;
+    --intendance: #6fae7a;
+    --warn: #d96b5c;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(201,168,74,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(111,174,122,0.07), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 48px 20px 80px;
+    line-height: 1.5;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 40px; }
+  .eyebrow {
+    font-size: 0.72rem; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px; font-weight: 500;
+  }
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: clamp(2.1rem, 5vw, 3.2rem); line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  h1 em { font-style: italic; color: var(--gold); }
+  .sub { color: var(--muted); margin-top: 14px; font-size: 0.95rem; }
+
+  .input-card {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 28px; margin-bottom: 28px;
+  }
+  .input-label {
+    font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px; display: block;
+  }
+  .field {
+    display: flex; align-items: baseline; gap: 4px;
+    border-bottom: 2px solid var(--line); padding-bottom: 8px;
+    transition: border-color 0.25s;
+  }
+  .field:focus-within { border-color: var(--gold); }
+  .field span { font-family: 'Fraunces', serif; font-size: 2rem; color: var(--muted); }
+  #revenu {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: 'Fraunces', serif; font-weight: 600;
+    font-size: clamp(2rem, 7vw, 3rem); color: var(--ink);
+    width: 100%;
+  }
+  #revenu::-webkit-outer-spin-button, #revenu::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .freq { display: flex; gap: 8px; margin-top: 18px; }
+  .freq button {
+    flex: 1; background: var(--bg-input); border: 1px solid var(--line);
+    color: var(--muted); padding: 9px; border-radius: 9px; cursor: pointer;
+    font-family: 'Outfit'; font-size: 0.82rem; transition: all 0.2s;
+  }
+  .freq button.active { background: var(--gold); color: #1a1408; border-color: var(--gold); font-weight: 600; }
+
+  .bar { display: flex; height: 12px; border-radius: 99px; overflow: hidden; margin-bottom: 12px; background: var(--bg-input); }
+  .bar i { display: block; height: 100%; transition: width 0.25s cubic-bezier(.4,0,.2,1); }
+
+  .ratio-status {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px; font-size: 0.85rem;
+  }
+  .ratio-status .label { color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.72rem; }
+  .controls-right { display:flex; gap:10px; align-items:center; }
+  .pill {
+    font-family: 'Fraunces', serif; font-weight: 600;
+    padding: 4px 14px; border-radius: 99px; transition: all 0.25s;
+  }
+  .pill.ok   { background: rgba(111,174,122,0.16); color: var(--intendance); }
+  .pill.off  { background: rgba(217,107,92,0.16);  color: var(--warn); }
+  .btn-mini {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(201,168,74,0.1); border: 1px solid var(--gold); color: var(--gold);
+    padding: 5px 14px; border-radius: 99px; cursor: pointer; font-family: 'Outfit';
+    font-size: 0.78rem; font-weight: 500; transition: all 0.2s;
+  }
+  .btn-mini:hover { background: var(--gold); color: #1a1408; }
+  .btn-mini svg { width: 13px; height: 13px; }
+
+  .lock-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 22px;
+    font-size: 0.8rem; color: var(--muted); cursor: pointer; user-select: none;
+  }
+  .lock-row input { accent-color: var(--gold); width: 16px; height: 16px; cursor: pointer; }
+
+  .accounts { display: grid; gap: 14px; }
+  .acct {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-left: 4px solid var(--c); border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+  .acct-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .acct .name { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 600; }
+  .acct .arch { font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c); margin-top: 2px; }
+  .acct .pct-input {
+    display: flex; align-items: baseline; gap: 2px;
+    background: var(--bg-input); padding: 4px 8px 4px 12px; border-radius: 9px;
+    border: 1px solid transparent; transition: border-color 0.2s;
+  }
+  .acct .pct-input:focus-within { border-color: var(--c); }
+  .acct .pct-input input {
+    width: 52px; background: transparent; border: none; outline: none;
+    font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 700;
+    color: var(--c); text-align: right;
+  }
+  .acct .pct-input input::-webkit-outer-spin-button,
+  .acct .pct-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .acct .pct-input .sym { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 700; color: var(--c); }
+
+  .slider {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+    border-radius: 99px; background: var(--bg-input); outline: none;
+    margin: 16px 0 14px; cursor: pointer;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--c); cursor: pointer;
+    border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--c), 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.12s;
+  }
+  .slider::-webkit-slider-thumb:active { transform: scale(1.2); }
+  .slider::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--c);
+    cursor: pointer; border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--c);
+  }
+
+  .acct .amount {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.8rem, 6vw, 2.4rem); font-weight: 900;
+    color: var(--c); letter-spacing: -0.02em;
+  }
+
+  footer { text-align: center; margin-top: 36px; color: var(--muted); font-size: 0.82rem; }
+  footer b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Méthode Profit First</div>
+    <h1>Ventiler chaque <em>euro</em><br>qui entre</h1>
+    <p class="sub">Glisse les curseurs pour ajuster tes ratios : la répartition se recalcule en direct.</p>
+  </header>
+
+  <div class="input-card">
+    <label class="input-label" for="revenu">Revenu à ventiler</label>
+    <div class="field">
+      <input type="number" id="revenu" placeholder="0" inputmode="decimal" min="0" step="100">
+      <span>€</span>
+    </div>
+    <div class="freq">
+      <button data-period="ponctuel" class="active">Ponctuel</button>
+      <button data-period="annuel">Projection 12 mois</button>
+    </div>
+  </div>
+
+  <div class="bar" id="bar"></div>
+
+  <div class="ratio-status">
+    <span class="label">Total des ratios</span>
+    <div class="controls-right">
+      <span class="pill ok" id="pill">100 %</span>
+      <button class="btn-mini" id="reset" title="Revenir aux ratios 3 / 40 / 27 / 30">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        Ratios par défaut
+      </button>
+    </div>
+  </div>
+
+  <label class="lock-row">
+    <input type="checkbox" id="autobalance" checked>
+    Équilibrage automatique à 100 % (ajuste les autres curseurs)
+  </label>
+
+  <div class="accounts" id="accounts"></div>
+
+  <footer>
+    Total réparti : <b id="total">0 €</b> <span id="periodLabel"></span>
+  </footer>
+</div>
+
+<script>
+  const DEFAULTS = [
+    { key: 'benefice',   name: 'Bénéfice',             arch: 'Le Roi',      ratio: 3,  color: 'var(--roi)' },
+    { key: 'salaires',   name: 'Salaires',             arch: 'Le Guerrier', ratio: 40, color: 'var(--guerrier)' },
+    { key: 'impot',      name: 'Impôt',                arch: 'La Sécurité', ratio: 27, color: 'var(--securite)' },
+    { key: 'frais',      name: "Frais d'exploitation", arch: "L'Intendance",ratio: 30, color: 'var(--intendance)' },
+  ];
+  let comptes = DEFAULTS.map(c => ({ ...c }));
+
+  const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 });
+  const input = document.getElementById('revenu');
+  const accountsEl = document.getElementById('accounts');
+  const barEl = document.getElementById('bar');
+  const pill = document.getElementById('pill');
+  const autoBox = document.getElementById('autobalance');
+  let period = 'ponctuel';
+
+  function build() {
+    accountsEl.innerHTML = '';
+    barEl.innerHTML = '';
+    comptes.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'acct';
+      div.style.setProperty('--c', c.color);
+      div.innerHTML = `
+        <div class="acct-head">
+          <div>
+            <div class="name">${c.name}</div>
+            <div class="arch">${c.arch}</div>
+          </div>
+          <div class="pct-input">
+            <input type="number" id="pctnum-${c.key}" value="${c.ratio}" min="0" max="100" step="0.5" inputmode="decimal">
+            <span class="sym">%</span>
+          </div>
+        </div>
+        <input type="range" class="slider" id="sld-${c.key}" min="0" max="100" step="0.5" value="${c.ratio}">
+        <div class="amount" id="amt-${c.key}">—</div>`;
+      accountsEl.appendChild(div);
+
+      const seg = document.createElement('i');
+      seg.style.background = c.color;
+      seg.id = 'seg-' + c.key;
+      barEl.appendChild(seg);
+
+      div.querySelector('#sld-' + c.key).addEventListener('input', e => {
+        onSlide(c.key, parseFloat(e.target.value));
+      });
+
+      const numEl = div.querySelector('#pctnum-' + c.key);
+      numEl.addEventListener('input', e => {
+        let v = parseFloat(e.target.value);
+        if (isNaN(v)) return;
+        v = Math.min(100, Math.max(0, v));
+        onSlide(c.key, v);
+      });
+      // recadre la valeur si elle est hors bornes une fois la saisie terminée
+      numEl.addEventListener('blur', e => {
+        let v = parseFloat(e.target.value);
+        if (isNaN(v)) v = 0;
+        onSlide(c.key, Math.min(100, Math.max(0, v)));
+      });
+    });
+  }
+
+  // Rééquilibrage : répartit le complément sur les autres comptes au prorata de leur poids actuel
+  function onSlide(key, newVal) {
+    const moved = comptes.find(c => c.key === key);
+    if (autoBox.checked) {
+      const others = comptes.filter(c => c.key !== key);
+      const remaining = 100 - newVal;
+      const othersSum = others.reduce((s, c) => s + c.ratio, 0);
+      moved.ratio = newVal;
+      if (othersSum <= 0) {
+        const each = remaining / others.length;
+        others.forEach(c => c.ratio = each);
+      } else {
+        others.forEach(c => c.ratio = remaining * (c.ratio / othersSum));
+      }
+      // arrondis propres au demi-point, on absorbe l'écart sur le dernier
+      comptes.forEach(c => c.ratio = Math.round(c.ratio * 2) / 2);
+      const drift = 100 - comptes.reduce((s, c) => s + c.ratio, 0);
+      const last = others[others.length - 1];
+      if (last) last.ratio = Math.round((last.ratio + drift) * 2) / 2;
+    } else {
+      moved.ratio = newVal;
+    }
+    syncControls(key);
+    render();
+  }
+
+  function syncControls(activeKey) {
+    comptes.forEach(c => {
+      const s = document.getElementById('sld-' + c.key);
+      if (s) s.value = c.ratio;
+      const n = document.getElementById('pctnum-' + c.key);
+      // ne pas réécrire le champ que l'utilisateur est en train de taper
+      if (n && c.key !== activeKey) n.value = Math.round(c.ratio * 10) / 10;
+    });
+  }
+
+  function render() {
+    const base = parseFloat(input.value) || 0;
+    const annual = period === 'annuel';
+    const revenu = base * (annual ? 12 : 1);
+    const sum = comptes.reduce((s, c) => s + c.ratio, 0);
+    let total = 0;
+
+    comptes.forEach(c => {
+      const v = revenu * (c.ratio / 100);
+      total += v;
+      document.getElementById('amt-' + c.key).textContent = base ? fmt.format(v) : '—';
+      document.getElementById('seg-' + c.key).style.width =
+        (sum > 0 ? (c.ratio / sum * 100) : 0) + '%';
+    });
+
+    document.getElementById('total').textContent = fmt.format(total);
+
+    let label = '';
+    if (base && annual) label = '/ an (revenu mensuel × 12)';
+    document.getElementById('periodLabel').textContent = label;
+
+    const rounded = Math.round(sum * 100) / 100;
+    pill.textContent = rounded.toLocaleString('fr-FR') + ' %';
+    pill.className = 'pill ' + (rounded === 100 ? 'ok' : 'off');
+  }
+
+  input.addEventListener('input', render);
+
+  document.querySelectorAll('.freq button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.freq button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      period = b.dataset.period;
+      render();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
+    comptes = DEFAULTS.map(c => ({ ...c }));
+    build();
+    render();
+  });
+
+  build();
+  render();
+</script>
+</body>
+</html>
